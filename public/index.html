@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tic Tac Toe</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    #board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; justify-content: center; }
+    .cell { width: 100px; height: 100px; font-size: 40px; display: flex; align-items: center; justify-content: center; border: 2px solid #333; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe (real-time test)</h1>
+  <div id="board"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const board = document.getElementById('board');
+    const cells = [];
+
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.addEventListener('click', () => {
+        if (cell.textContent) return;
+        cell.textContent = 'X';
+        socket.emit('move', { index: i, symbol: 'X' });
+      });
+      board.appendChild(cell);
+      cells.push(cell);
+    }
+
+    socket.on('move', (data) => {
+      cells[data.index].textContent = data.symbol;
+    });
+  </script>
+</body>
+</html>
