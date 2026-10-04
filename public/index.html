@@ -16,22 +16,38 @@
   <script>
     const socket = io();
     const board = document.getElementById('board');
+    const status = document.createElement('p');
+    document.body.insertBefore(status, board);
     const cells = [];
+    let mySymbol = null;
 
     for (let i = 0; i < 9; i++) {
       const cell = document.createElement('div');
       cell.classList.add('cell');
       cell.addEventListener('click', () => {
-        if (cell.textContent) return;
-        cell.textContent = 'X';
-        socket.emit('move', { index: i, symbol: 'X' });
+        socket.emit('move', i);
       });
       board.appendChild(cell);
       cells.push(cell);
     }
 
-    socket.on('move', (data) => {
-      cells[data.index].textContent = data.symbol;
+    socket.on('assignSymbol', (symbol) => {
+      mySymbol = symbol;
+      status.textContent = symbol === 'spectator'
+        ? 'You are spectating.'
+        : `You are ${symbol}.`;
+    });
+
+    socket.on('gameState', ({ board: newBoard, currentTurn, gameOver, winner }) => {
+      newBoard.forEach((val, i) => {
+        cells[i].textContent = val || '';
+      });
+
+      if (gameOver) {
+        status.textContent = winner ? `${winner} wins!` : "It's a draw!";
+      } else if (mySymbol && mySymbol !== 'spectator') {
+        status.textContent = currentTurn === mySymbol ? 'Your turn' : "Opponent's turn";
+      }
     });
   </script>
 </body>
