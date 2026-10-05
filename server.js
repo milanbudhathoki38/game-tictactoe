@@ -63,6 +63,13 @@ io.on('connection', (socket) => {
     io.emit('gameState', { board, currentTurn, gameOver, winner });
   });
 
+  socket.on('resetGame', () => {
+  board = Array(9).fill(null);
+  currentTurn = 'X';
+  gameOver = false;
+  io.emit('gameState', { board, currentTurn, gameOver, winner: null });
+});
+
   socket.on('disconnect', () => {
     console.log('Player disconnected:', socket.id);
     delete players[socket.id];
