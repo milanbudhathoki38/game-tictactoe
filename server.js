@@ -8,10 +8,16 @@ const io = new Server(server);
 
 app.use(express.static('public'));
 
-let board = Array(9).fill(null);
-let currentTurn = 'X';
-let gameOver = false;
-const players = {};
+const games = {};
+
+function createEmptyGame() {
+  return {
+    board: Array(9).fill(null),
+    currentTurn: 'X',
+    gameOver: false,
+    players: {},
+  };
+}
 
 function checkWinner(board) {
   const lines = [
@@ -28,51 +34,72 @@ function checkWinner(board) {
 }
 
 io.on('connection', (socket) => {
-  const assignedCount = Object.keys(players).length;
+  const room = socket.handshake.query.room || 'default';
+  socket.join(room);
 
+  if (!games[room]) {
+    games[room] = createEmptyGame();
+  }
+  const game = games[room];
+
+  const assignedCount = Object.keys(game.players).length;
   if (assignedCount < 2) {
     const symbol = assignedCount === 0 ? 'X' : 'O';
-    players[socket.id] = symbol;
+    game.players[socket.id] = symbol;
     socket.emit('assignSymbol', symbol);
-    console.log(`Player connected as ${symbol}:`, socket.id);
+    console.log(`Player connected as ${symbol} in room ${room}:`, socket.id);
   } else {
     socket.emit('assignSymbol', 'spectator');
-    console.log('Spectator connected:', socket.id);
+    console.log(`Spectator connected in room ${room}:`, socket.id);
   }
 
-  socket.emit('gameState', { board, currentTurn, gameOver });
+  socket.emit('gameState', {
+    board: game.board,
+    currentTurn: game.currentTurn,
+    gameOver: game.gameOver,
+  });
 
   socket.on('move', (index) => {
-    const symbol = players[socket.id];
+    const symbol = game.players[socket.id];
     if (!symbol) return;
-    if (gameOver) return;
-    if (symbol !== currentTurn) return;
-    if (board[index]) return;
+    if (game.gameOver) return;
+    if (symbol !== game.currentTurn) return;
+    if (game.board[index]) return;
 
-    board[index] = symbol;
+    game.board[index] = symbol;
 
-    const winner = checkWinner(board);
+    const winner = checkWinner(game.board);
     if (winner) {
-      gameOver = true;
-    } else if (board.every((cell) => cell)) {
-      gameOver = true;
+      game.gameOver = true;
+    } else if (game.board.every((cell) => cell)) {
+      game.gameOver = true;
     } else {
-      currentTurn = currentTurn === 'X' ? 'O' : 'X';
+      game.currentTurn = game.currentTurn === 'X' ? 'O' : 'X';
     }
 
-    io.emit('gameState', { board, currentTurn, gameOver, winner });
+    io.to(room).emit('gameState', {
+      board: game.board,
+      currentTurn: game.currentTurn,
+      gameOver: game.gameOver,
+      winner,
+    });
   });
 
   socket.on('resetGame', () => {
-  board = Array(9).fill(null);
-  currentTurn = 'X';
-  gameOver = false;
-  io.emit('gameState', { board, currentTurn, gameOver, winner: null });
-});
+    game.board = Array(9).fill(null);
+    game.currentTurn = 'X';
+    game.gameOver = false;
+    io.to(room).emit('gameState', {
+      board: game.board,
+      currentTurn: game.currentTurn,
+      gameOver: game.gameOver,
+      winner: null,
+    });
+  });
 
   socket.on('disconnect', () => {
-    console.log('Player disconnected:', socket.id);
-    delete players[socket.id];
+    console.log(`Player disconnected from room ${room}:`, socket.id);
+    delete game.players[socket.id];
   });
 });
 

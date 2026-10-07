@@ -9,14 +9,17 @@
   </style>
 </head>
 <body>
-  <h1>Tic Tac Toe (real-time test)</h1>
+  <h1>Tic Tac Toe (real time test)</h1>
   <div id="board"></div>
 
   <button id="resetBtn" style="display:none; margin-top:20px;">Play Again</button>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    const room = urlParams.get('room') || 'default';
+
+    const socket = io({ query: { room } });
     const board = document.getElementById('board');
     const status = document.createElement('p');
     document.body.insertBefore(status, board);
