@@ -18,6 +18,7 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const room = urlParams.get('room') || 'default';
+    document.querySelector('h1').textContent = `Tic Tac Toe (room: ${room})`;
 
     const socket = io({ query: { room } });
     const board = document.getElementById('board');
