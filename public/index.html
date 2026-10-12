@@ -12,6 +12,8 @@
   <h1>Tic Tac Toe (real time test)</h1>
   <div id="board"></div>
 
+  <p id="score"></p>
+
   <button id="resetBtn" style="display:none; margin-top:20px;">Play Again</button>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -24,6 +26,7 @@
     const board = document.getElementById('board');
     const status = document.createElement('p');
     document.body.insertBefore(status, board);
+    const scoreEl = document.getElementById('score');
     const resetBtn = document.getElementById('resetBtn');
     const cells = [];
     let mySymbol = null;
@@ -45,7 +48,7 @@
         : `You are ${symbol}.`;
     });
 
-    socket.on('gameState', ({ board: newBoard, currentTurn, gameOver, winner }) => {
+    socket.on('gameState', ({ board: newBoard, currentTurn, gameOver, winner, wins }) => {
       newBoard.forEach((val, i) => {
         cells[i].textContent = val || '';
       });
@@ -56,6 +59,7 @@
         status.textContent = currentTurn === mySymbol ? 'Your turn' : "Opponent's turn";
       }
 
+      scoreEl.textContent = `X: ${wins.X} | O: ${wins.O}`;
       resetBtn.style.display = gameOver ? 'inline-block' : 'none';
     });
 

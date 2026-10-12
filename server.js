@@ -16,6 +16,7 @@ function createEmptyGame() {
     currentTurn: 'X',
     gameOver: false,
     players: {},
+    wins: { X: 0, O: 0 },
   };
 }
 
@@ -57,6 +58,8 @@ io.on('connection', (socket) => {
     board: game.board,
     currentTurn: game.currentTurn,
     gameOver: game.gameOver,
+    winner: checkWinner(game.board),
+    wins: game.wins,
   });
 
   socket.on('move', (index) => {
@@ -71,6 +74,7 @@ io.on('connection', (socket) => {
     const winner = checkWinner(game.board);
     if (winner) {
       game.gameOver = true;
+      game.wins[winner] += 1;
     } else if (game.board.every((cell) => cell)) {
       game.gameOver = true;
     } else {
@@ -82,6 +86,7 @@ io.on('connection', (socket) => {
       currentTurn: game.currentTurn,
       gameOver: game.gameOver,
       winner,
+      wins: game.wins,
     });
   });
 
@@ -94,6 +99,7 @@ io.on('connection', (socket) => {
       currentTurn: game.currentTurn,
       gameOver: game.gameOver,
       winner: null,
+      wins: game.wins,
     });
   });
 
