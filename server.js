@@ -42,10 +42,9 @@ io.on('connection', (socket) => {
     games[room] = createEmptyGame();
   }
   const game = games[room];
-
-  const assignedCount = Object.keys(game.players).length;
-  if (assignedCount < 2) {
-    const symbol = assignedCount === 0 ? 'X' : 'O';
+  const taken = Object.values(game.players);
+  if (taken.length < 2) {
+    const symbol = taken.includes('X') ? 'O' : 'X';
     game.players[socket.id] = symbol;
     socket.emit('assignSymbol', symbol);
     console.log(`Player connected as ${symbol} in room ${room}:`, socket.id);
