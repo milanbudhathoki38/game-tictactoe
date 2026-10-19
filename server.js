@@ -62,6 +62,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('move', (index) => {
+    if (!Number.isInteger(index) || index < 0 || index > 8) return;
     const symbol = game.players[socket.id];
     if (!symbol) return;
     if (game.gameOver) return;
