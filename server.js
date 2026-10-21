@@ -103,9 +103,15 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('disconnect', () => {
+    socket.on('disconnect', () => {
     console.log(`Player disconnected from room ${room}:`, socket.id);
     delete game.players[socket.id];
+
+    const stillInRoom = io.sockets.adapter.rooms.get(room);
+    if (!stillInRoom || stillInRoom.size === 0) {
+      delete games[room];
+      console.log(`Room ${room} deleted`);
+    }
   });
 });
 
